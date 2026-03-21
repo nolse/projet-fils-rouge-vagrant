@@ -22,8 +22,8 @@ SSH_USER="ubuntu"
 # Détection automatique de l'environnement
 # --------------------------------------------------------
 if grep -qi microsoft /proc/version 2>/dev/null; then
-    WIN_USER=$(cmd.exe /c "echo %USERNAME%" 2>/dev/null | tr -d '\r')
-    SSH_KEY="/mnt/c/Users/${WIN_USER}/.ssh/projet-fil-rouge-key.pem"
+    
+    SSH_KEY="$HOME/projet-fil-rouge-key.pem"
 else
     SSH_KEY="$HOME/.ssh/projet-fil-rouge-key.pem"
 fi
@@ -41,7 +41,7 @@ if [ -f "$IPS_FILE" ]; then
 else
     echo "⚙️  Appel terraform output..."
     if grep -qi microsoft /proc/version 2>/dev/null; then
-        WIN_USER=$(cmd.exe /c "echo %USERNAME%" 2>/dev/null | tr -d '\r')
+        
         TERRAFORM_DIR="/mnt/c/Users/${WIN_USER}/cursus-devops/projet_fil_rouge_infra/app"
     else
         TERRAFORM_DIR="$HOME/cursus-devops/projet_fil_rouge_infra/app"
