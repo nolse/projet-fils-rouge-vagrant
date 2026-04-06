@@ -5,7 +5,8 @@
 - Terraform 1.14.5 | AWS us-east-1 | Backend S3 : terraform-backend-balde
 - Ansible >= 2.12 | Collection community.docker
 - Docker | Images : alphabalde/ic-webapp:1.0, jenkins/jenkins:lts, odoo:13.0, dpage/pgadmin4
-- Minikube v1.38.1 | kubectl v1.34.1 | driver Docker sur Windows
+- Minikube v1.35.0 | kubectl v1.32.13 | driver Docker sur VM Vagrant Ubuntu 22.04
+- VM Vagrant : IP fixe 192.168.56.100 | interface enp0s8 | Minikube IP 192.168.49.2
 - Repo infra  : https://github.com/nolse/projet_fil_rouge_infra
 - Repo ansible: https://github.com/nolse/projet-fils-rouge
 
@@ -39,39 +40,42 @@
 - PostgreSQL    : odoo / odoo_password
 
 ## Workflow Kubernetes (a suivre a chaque session)
-# 1. Demarrer Minikube
+
+### Demarrage
+# 1. Depuis Git Bash Windows
+cd /d/cursus_devops/vagrant/minikube/minikube_ubuntu22
+vagrant up && vagrant ssh
+
+# 2. Dans la VM
 minikube start --driver=docker
 
-# 2. Deployer toutes les ressources
+# 3. Configurer le reseau (iptables DNAT vers Minikube)
+bash setup-network.sh
+
+# 4. Deployer toutes les ressources
 bash kubernetes/commandes_utils.sh deploy
 
-# 3. Ouvrir les tunnels (necessaire sur Windows - ports changent a chaque session)
-bash kubernetes/commandes_utils.sh open
-# -> Le navigateur s'ouvre automatiquement
-# -> Noter les ports 127.0.0.1:PORT affiches ET les ports dans la barre du navigateur
-# -> Le bon port est celui dans la barre d'adresse du navigateur
+### Acces depuis Windows (ports fixes - pas de port-forward necessaire)
+- ic-webapp -> http://192.168.56.100:30080
+- Odoo      -> http://192.168.56.100:30069
+- pgAdmin   -> http://192.168.56.100:30050
 
-# 4. Mettre a jour les URLs de la vitrine avec les ports tunnels actifs
-bash kubernetes/commandes_utils.sh update-urls PORT_WEBAPP PORT_ODOO PORT_PGADMIN
-
-# 5. Si page blanche sur Odoo -> ouvrir : http://127.0.0.1:PORT/web?debug=assets
-#    Le correctif permanent est --update=web dans les args du deployment Odoo
-
-# 6. Fin de session
+### Fin de session
 minikube stop
+exit
+vagrant halt
 
 ## Points importants Kubernetes
-- Sur Windows driver Docker : IP 192.168.x.x non accessible depuis navigateur
-  -> Toujours utiliser minikube service pour creer des tunnels 127.0.0.1
-  -> Les ports tunnels changent a chaque session
-  -> Le bon port est dans la barre d'adresse du navigateur, pas toujours dans le terminal
-- --init=base : utilise uniquement au premier demarrage pour initialiser la BDD
-  -> Retire du deployment apres init reussie
-  -> Remplace par --update=web pour regenerer les assets a chaque demarrage
-- Caracteres speciaux (emojis, tirets) dans les YAML : probleme encodage Windows
-  -> Utiliser uniquement ASCII dans les commentaires YAML
-- PVC necessaires pour Odoo : postgres-pvc (2Gi) ET odoo-pvc (1Gi /var/lib/odoo)
-  -> Sans odoo-pvc, les assets CSS/JS sont perdus au redemarrage du pod
+- Sur Vagrant, l'IP Minikube (192.168.49.2) n'est pas directement accessible depuis Windows
+  -> setup-network.sh configure des regles iptables DNAT sur l'interface enp0s8
+  -> Les NodePorts sont accessibles via l'IP fixe de la VM 192.168.56.100
+  -> Les ports sont fixes et ne changent pas entre les sessions
+- Reseau VM : enp0s8 = 192.168.56.100 (host-only VirtualBox) | br-b5510e82bb93 = bridge Minikube
+- --update=web dans les args Odoo : regenere les assets CSS/JS a chaque demarrage
+- PVC necessaires : postgres-pvc (2Gi) ET odoo-pvc (1Gi /var/lib/odoo)
+- La base odoo est creee automatiquement par Odoo au 1er demarrage via odoo.conf
+  -> Ne pas utiliser le database manager pour recreer la base
+  -> Se connecter directement sur http://192.168.56.100:30069 avec admin/admin
 
 ## Structure Kubernetes
 kubernetes/
@@ -79,7 +83,6 @@ kubernetes/
 ├── secrets.yml
 ├── commandes_utils.sh
 ├── architecture.svg
-├── https_ingress_flow.svg
 ├── README.md
 ├── postgres/
 │   ├── deployment.yml
@@ -95,7 +98,7 @@ kubernetes/
 │   ├── service.yml
 │   └── configmap.yml      # servers.json preconfiguree
 └── webapp/
-    ├── deployment.yml     # ODOO_URL et PGADMIN_URL a mettre a jour chaque session
+    ├── deployment.yml     # ODOO_URL et PGADMIN_URL fixes (NodePorts)
     └── service.yml
 
 ## Reste a faire

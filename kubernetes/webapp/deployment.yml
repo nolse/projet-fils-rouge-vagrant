@@ -41,8 +41,8 @@ spec:
           env:
             # URL vers Odoo - mise a jour via commandes_utils.sh update-urls
             - name: ODOO_URL
-              value: "http://127.0.0.1:50928"
+              value: "http://192.168.56.100:30069"
 
             # URL vers pgAdmin - mise a jour via commandes_utils.sh update-urls
             - name: PGADMIN_URL
-              value: "http://127.0.0.1:50929"
+              value: "http://192.168.56.100:30050"
