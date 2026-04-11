@@ -4,55 +4,45 @@
 # Génère automatiquement l'inventaire Ansible (hosts.yml)
 #
 # Deux modes de fonctionnement :
-#   1. Fichier terraform_ips.json présent → lecture directe (WSL)
-#   2. Sinon → appel terraform output (Git Bash / Linux natif)
+#   1. Fichier terraform_ips.json présent → lecture directe
+#   2. Sinon → appel terraform output depuis terraform/app
 #
-# Prérequis WSL : générer terraform_ips.json depuis Git Bash :
-#   terraform output -json public_ips > inventaire/terraform_ips.json
+# Prérequis :
+#   - reproduce_infra.sh exécuté avec succès
+#   - jq installé (sudo apt install jq)
 #
-# Compatible : WSL, Linux natif, Git Bash
+# Utilisation :
+#   bash inventaire/generate_inventory.sh
 # ============================================================
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 OUTPUT_FILE="$SCRIPT_DIR/hosts.yml"
 IPS_FILE="$SCRIPT_DIR/terraform_ips.json"
 SSH_USER="ubuntu"
+# Clé SSH attendue dans ~/.ssh/
+SSH_KEY="$HOME/.ssh/projet-fil-rouge-key.pem"
 
-# --------------------------------------------------------
-# Détection automatique de l'environnement
-# --------------------------------------------------------
-if grep -qi microsoft /proc/version 2>/dev/null; then
-    
-    SSH_KEY="$HOME/projet-fil-rouge-key.pem"
-else
-    SSH_KEY="$HOME/.ssh/projet-fil-rouge-key.pem"
-fi
-
-echo "🔍 Environnement détecté : $(uname -s)"
+echo "🔍 Environnement : Vagrant Linux"
 
 # --------------------------------------------------------
 # Récupération des IPs
-# Mode 1 : fichier JSON pré-généré (WSL)
-# Mode 2 : appel direct terraform (Git Bash / Linux)
+# Mode 1 : fichier JSON pré-généré par reproduce_infra.sh
+# Mode 2 : appel direct terraform
 # --------------------------------------------------------
 if [ -f "$IPS_FILE" ]; then
     echo "📄 Lecture depuis terraform_ips.json..."
     TF_OUTPUT=$(cat "$IPS_FILE")
 else
     echo "⚙️  Appel terraform output..."
-    if grep -qi microsoft /proc/version 2>/dev/null; then
-        
-        TERRAFORM_DIR="/mnt/c/Users/${WIN_USER}/cursus-devops/projet_fil_rouge_infra/app"
-    else
-        TERRAFORM_DIR="$HOME/cursus-devops/projet_fil_rouge_infra/app"
-    fi
-    cd "$TERRAFORM_DIR" || { echo "❌ Dossier Terraform introuvable"; exit 1; }
+    TERRAFORM_DIR="$REPO_DIR/terraform/app"
+    cd "$TERRAFORM_DIR" || { echo "❌ Dossier Terraform introuvable : $TERRAFORM_DIR"; exit 1; }
     TF_OUTPUT=$(terraform output -json public_ips 2>/dev/null)
 fi
 
 if [ -z "$TF_OUTPUT" ] || [ "$TF_OUTPUT" = "null" ]; then
     echo "❌ Aucune IP trouvée."
-    echo "   → Depuis Git Bash : terraform output -json public_ips > inventaire/terraform_ips.json"
+    echo "   → Lancer d'abord : bash reproduce_infra.sh"
     exit 1
 fi
 
