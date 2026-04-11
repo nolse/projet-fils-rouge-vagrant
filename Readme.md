@@ -44,19 +44,11 @@ chmod 600 ~/.ssh/projet-fil-rouge-key.pem
 
 ### Outils requis dans la VM
 ```bash
-# Terraform
-sudo apt install -y terraform
+# Installer tous les prerequis en une commande
+bash bootstrap.sh
 
-# AWS CLI + credentials
-sudo apt install -y awscli
+# Configurer les credentials AWS
 aws configure
-
-# jq (parsing JSON)
-sudo apt install -y jq
-
-# Ansible
-sudo apt install -y ansible
-ansible-galaxy collection install community.docker
 ```
 
 ---
