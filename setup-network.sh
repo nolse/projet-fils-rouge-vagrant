@@ -67,10 +67,10 @@ add_dnat $WEBAPP_PORT
 add_dnat $ODOO_PORT
 add_dnat $PGADMIN_PORT
 
-# --- MASQUERADE ---
-if ! sudo iptables -t nat -C POSTROUTING -j MASQUERADE 2>/dev/null; then
-  sudo iptables -t nat -A POSTROUTING -j MASQUERADE
-  echo -e "${GREEN}>>> MASQUERADE ajoute${NC}"
+# --- MASQUERADE cible uniquement le reseau Minikube ---
+if ! sudo iptables -t nat -C POSTROUTING -d 192.168.49.0/24 -j MASQUERADE 2>/dev/null; then
+  sudo iptables -t nat -A POSTROUTING -d 192.168.49.0/24 -j MASQUERADE
+  echo -e "${GREEN}>>> MASQUERADE ajoute (reseau Minikube uniquement)${NC}"
 fi
 
 # --- Regles FORWARD ---
