@@ -82,3 +82,23 @@
     name: ubuntu
     groups: docker
     append: true
+
+# --- 5. Installation Docker CLI + Ansible dans le container Jenkins ---
+# Necessaire pour que le pipeline puisse builder des images
+# et lancer des playbooks Ansible depuis Jenkins
+- name: Installer Docker CLI et Ansible dans le container Jenkins
+  ansible.builtin.shell: |
+    docker exec -u root jenkins bash -c \
+    'apt-get update -qq && apt-get install -y -qq docker.io ansible'
+  args:
+    executable: /bin/bash
+
+- name: Installer la collection community.docker dans Jenkins
+  ansible.builtin.shell: |
+    docker exec -u root jenkins bash -c \
+    'ansible-galaxy collection install community.docker'
+  args:
+    executable: /bin/bash
+
+- name: Reset connexion SSH pour recharger le groupe docker
+  meta: reset_connection      
