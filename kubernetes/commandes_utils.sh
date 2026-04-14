@@ -129,8 +129,6 @@ creds() {
   echo -e "${GREEN}======================================${NC}"
 }
 
-# --- Lancement des port-forwards (optionnel sur Vagrant) ---
-# Sur Vagrant, les NodePorts sont directement accessibles.
 # Cette action reste disponible si besoin de rediriger des ports.
 open() {
   echo -e "${YELLOW}>>> Liberation des ports si deja occupes...${NC}"

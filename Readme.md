@@ -328,9 +328,7 @@ bash setup-network.sh
 bash kubernetes/commandes_utils.sh deploy
 
 # 4. Verifier l'etat
-kubectl get pods -n icgroup
-kubectl get svc -n icgroup
-kubectl get pvc -n icgroup
+kubectl get pods -n icgroup;kubectl get svc -n icgroup;kubectl get pvc -n icgroup
 
 # 5. Fin de session
 minikube stop
@@ -343,14 +341,6 @@ minikube stop
 | ic-webapp | http://192.168.56.100:30080 |
 | Odoo | http://192.168.56.100:30069 |
 | pgAdmin | http://192.168.56.100:30050 |
-
-### Credentials
-
-| Application | Login | Password |
-|---|---|---|
-| Odoo | admin | admin |
-| pgAdmin | admin@icgroup.fr | pgadmin_password |
-| PostgreSQL (via pgAdmin) | odoo | odoo_password |
 
 Connexion PostgreSQL depuis pgAdmin :
 ```
